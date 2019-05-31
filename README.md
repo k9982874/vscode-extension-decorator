@@ -3,7 +3,7 @@
 The decorators for Visual Studio Code.
 
 ```
-npm install vscode-extension-decorator --save
+npm install vscode-extension-decorator --save-dev
 ```
 
 How to use:
