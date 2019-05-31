@@ -1,0 +1,31 @@
+{
+	"name": "vscode-extension-decorator",
+	"displayName": "Visual Studio Extension Decorator",
+	"description": "Decorator for VS Code",
+	"version": "0.0.1",
+	"publisher": "k9982874",
+	"author": {
+		"name": "Kevin Chou",
+		"url": "https://kexinlife.com",
+		"email": "k9982874@gmail.com"
+	},
+	"repository": "https://github.com/k9982874/vscode-extension-decorator",
+	"enableProposedApi": true,
+	"engines": {
+		"vscode": "^1.34.0"
+	},
+	"main": "./lib/index.js",
+	"scripts": {
+		"clean": "rm -rf lib/*",
+		"build": "./node_modules/.bin/tsc --build tsconfig.json"
+	},
+	"devDependencies": {
+		"@types/node": "^8.10.25",
+		"@types/vscode": "^1.34.0",
+		"tslint": "^5.16.0",
+		"typescript": "^3.4.5"
+	},
+	"dependencies": {
+		"vscode": "^1.1.34"
+	}
+}
