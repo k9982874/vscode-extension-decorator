@@ -59,26 +59,26 @@ export function Extension<T extends ExtensionClass<Subscriber>>(constructorFunct
 }
 
 export function Command(commandId: string): MethodDecorator {
-  return (target, propertyKey, descriptor) => {
+  return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
     commandList.push(commandId);
 
     const originalValue = descriptor.value;
     Object.defineProperty(target, commandId, {
       value () {
-        this.register(commands.registerCommand, commands, commandId, originalValue, this);
+        this.register(commands.registerCommand, commands, commandId, originalValue.bind(this, commandId), this);
       }
     });
   };
 }
 
 export function Event(eventId: string): MethodDecorator {
-  return (target, propertyKey, descriptor) => {
+  return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
     eventList.push(eventId);
 
     const originalValue = descriptor.value;
     Object.defineProperty(target, eventId, {
       value () {
-        this.register((workspace as any)[eventId], workspace, originalValue, this);
+        this.register((workspace as any)[eventId], workspace, originalValue.bind(this, eventId), this);
       }
     });
   };
