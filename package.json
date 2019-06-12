@@ -2,7 +2,7 @@
 	"name": "vscode-extension-decorator",
 	"displayName": "Visual Studio Extension Decorator",
 	"description": "Decorator for VS Code",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"publisher": "k9982874",
 	"author": {
 		"name": "Kevin Chou",

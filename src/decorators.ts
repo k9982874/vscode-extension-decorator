@@ -58,30 +58,59 @@ export function Extension<T extends ExtensionClass<Subscriber>>(constructorFunct
   return newConstructorFunction;
 }
 
-export function Command(commandId: string): MethodDecorator {
-  return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
-    commandList.push(commandId);
+export function Command(commandId: string, methodName?: string): MethodDecorator | PropertyDecorator {
+  if (methodName === undefined) {
+    return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
+      commandList.push(commandId);
 
-    const originalValue = descriptor.value;
-    Object.defineProperty(target, commandId, {
-      value () {
-        this.register(commands.registerCommand, commands, commandId, originalValue.bind(this, commandId), this);
-      }
-    });
-  };
+      Object.defineProperty(target, commandId, {
+        value () {
+          const method = descriptor.value.bind(this, commandId);
+          this.register(commands.registerCommand, commands, commandId, method, this);
+        }
+      });
+    };
+  } else {
+    return (target: Object, propertyKey: string | symbol) => {
+      eventList.push(commandId);
+
+      Object.defineProperty(target, commandId, {
+        value () {
+          const self = this[propertyKey];
+          const method = self[methodName].bind(self, commandId);
+          this.register(commands.registerCommand, commands, commandId, method, self);
+        }
+      });
+    };
+  }
 }
 
-export function Event(eventId: string): MethodDecorator {
-  return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
-    eventList.push(eventId);
+export function Event(eventId: string, methodName?: string): MethodDecorator | PropertyDecorator {
+  if (methodName === undefined) {
+    return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
+      eventList.push(eventId);
 
-    const originalValue = descriptor.value;
-    Object.defineProperty(target, eventId, {
-      value () {
-        this.register((workspace as any)[eventId], workspace, originalValue.bind(this, eventId), this);
-      }
-    });
-  };
+      Object.defineProperty(target, eventId, {
+        value () {
+          const method = descriptor.value.bind(this, eventId);
+          this.register((workspace as any)[eventId], workspace, method, this);
+        }
+      });
+    };
+  } else {
+    return (target: Object, propertyKey: string | symbol) => {
+      eventList.push(eventId);
+
+      Object.defineProperty(target, eventId, {
+        value () {
+          const self = this[propertyKey];
+          const method = self[methodName].bind(self, eventId);
+          this.register((workspace as any)[eventId], workspace, method, self);
+        }
+      });
+    };
+  }
+
 }
 
 export function TextDocumentContentProvider(id: string): PropertyDecorator {
