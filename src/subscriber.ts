@@ -1,6 +1,12 @@
 import { ExtensionContext, Disposable } from "vscode";
 
 export class Subscriber {
+  static readonly commandList: string[] = [];
+  static readonly  eventList: string[] = [];
+  static readonly  textDocumentContentProviderList: string[] = [];
+  static readonly  treeDataProviderList: string[] = [];
+  static readonly  webviewPanelSerializerList: string[] = [];
+
   private disposables: Disposable[] = new Array();
 
   constructor(context: ExtensionContext) {

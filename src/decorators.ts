@@ -2,66 +2,10 @@ import { commands, window, workspace, ExtensionContext, Disposable } from "vscod
 
 import { Subscriber } from "./Subscriber";
 
-const commandList: string[] = [];
-const eventList: string[] = [];
-const textDocumentContentProviderList: string[] = [];
-const treeDataProviderList: string[] = [];
-const webviewPanelSerializerList: string[] = [];
-
-export declare type ExtensionClass<T> = (new (context: ExtensionContext, ...args: any[]) => T & Subscriber) & typeof Subscriber;
-
-export function Extension<T extends ExtensionClass<Subscriber>>(constructorFunction: T) {
-  const newConstructorFunction: any = function (context: ExtensionContext, ...args: any[]) {
-    const func: any = function () {
-      return new constructorFunction(context, ...args);
-    };
-
-    func.prototype = constructorFunction.prototype;
-
-    const result: any = new func();
-
-    commandList.forEach(id => {
-      if (typeof result[id] === "function") {
-        result[id].call(result);
-      }
-    });
-
-    eventList.forEach(id => {
-      if (typeof result[id] === "function") {
-        result[id].call(result);
-      }
-    });
-
-    textDocumentContentProviderList.forEach(id => {
-      if (typeof result[id] === "function") {
-        result[id].call(result);
-      }
-    });
-
-    treeDataProviderList.forEach(id => {
-      if (typeof result[id] === "function") {
-        result[id].call(result);
-      }
-    });
-
-    webviewPanelSerializerList.forEach(id => {
-      if (typeof result[id] === "function") {
-        result[id].call(result);
-      }
-    });
-
-    return result;
-  };
-
-  newConstructorFunction.prototype = constructorFunction.prototype;
-
-  return newConstructorFunction;
-}
-
 export function Command(commandId: string, methodName?: string): MethodDecorator | PropertyDecorator {
   if (methodName === undefined) {
     return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
-      commandList.push(commandId);
+      Subscriber.commandList.push(commandId);
 
       Object.defineProperty(target, commandId, {
         value () {
@@ -72,7 +16,7 @@ export function Command(commandId: string, methodName?: string): MethodDecorator
     };
   } else {
     return (target: Object, propertyKey: string | symbol) => {
-      eventList.push(commandId);
+      Subscriber.eventList.push(commandId);
 
       Object.defineProperty(target, commandId, {
         value () {
@@ -88,7 +32,7 @@ export function Command(commandId: string, methodName?: string): MethodDecorator
 export function Event(eventId: string, methodName?: string): MethodDecorator | PropertyDecorator {
   if (methodName === undefined) {
     return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
-      eventList.push(eventId);
+      Subscriber.eventList.push(eventId);
 
       Object.defineProperty(target, eventId, {
         value () {
@@ -99,7 +43,7 @@ export function Event(eventId: string, methodName?: string): MethodDecorator | P
     };
   } else {
     return (target: Object, propertyKey: string | symbol) => {
-      eventList.push(eventId);
+      Subscriber.eventList.push(eventId);
 
       Object.defineProperty(target, eventId, {
         value () {
@@ -110,12 +54,11 @@ export function Event(eventId: string, methodName?: string): MethodDecorator | P
       });
     };
   }
-
 }
 
 export function TextDocumentContentProvider(id: string): PropertyDecorator {
-  return (target, propertyKey) => {
-    textDocumentContentProviderList.push(id);
+  return (target: Object, propertyKey: string | symbol) => {
+    Subscriber.textDocumentContentProviderList.push(id);
 
     Object.defineProperty(target, id, {
       value () {
@@ -126,8 +69,8 @@ export function TextDocumentContentProvider(id: string): PropertyDecorator {
 }
 
 export function TreeDataProvider(id: string): PropertyDecorator {
-  return (target, propertyKey) => {
-    treeDataProviderList.push(id);
+  return (target: Object, propertyKey: string | symbol) => {
+    Subscriber.treeDataProviderList.push(id);
 
     Object.defineProperty(target, id, {
       value () {
@@ -138,9 +81,9 @@ export function TreeDataProvider(id: string): PropertyDecorator {
 }
 
 export function WebviewPanel(id: string): PropertyDecorator {
-  return (target, propertyKey) => {
+  return (target: Object, propertyKey: string | symbol) => {
     if (window.registerWebviewPanelSerializer) {
-      webviewPanelSerializerList.push(id);
+      Subscriber.webviewPanelSerializerList.push(id);
 
       Object.defineProperty(target, id, {
         value () {
