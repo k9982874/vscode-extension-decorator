@@ -1,6 +1,6 @@
-import { commands, window, workspace, ExtensionContext, Disposable } from "vscode";
+import { commands, window, workspace } from "vscode";
 
-import { Subscriber } from "./Subscriber";
+import { Subscriber } from "./subscriber";
 
 export function Command(commandId: string, methodName?: string): MethodDecorator | PropertyDecorator {
   if (methodName === undefined) {
