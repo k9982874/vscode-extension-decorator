@@ -2,9 +2,11 @@ import { commands, window, workspace } from "vscode";
 
 import { Subscriber } from "./subscriber";
 
+export function Command(commandId: string): MethodDecorator;
+export function Command(commandId: string, methodName: string): PropertyDecorator;
 export function Command(commandId: string, methodName?: string): MethodDecorator | PropertyDecorator {
   if (methodName === undefined) {
-    return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
+    const ret = function (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) {
       Subscriber.commandList.push(commandId);
 
       Object.defineProperty(target, commandId, {
@@ -14,8 +16,9 @@ export function Command(commandId: string, methodName?: string): MethodDecorator
         }
       });
     };
+    return ret as MethodDecorator;
   } else {
-    return (target: Object, propertyKey: string | symbol) => {
+    const ret = function (target: Object, propertyKey: string | symbol) {
       Subscriber.eventList.push(commandId);
 
       Object.defineProperty(target, commandId, {
@@ -26,12 +29,15 @@ export function Command(commandId: string, methodName?: string): MethodDecorator
         }
       });
     };
+    return ret as PropertyDecorator;
   }
 }
 
+export function Event(eventId: string): MethodDecorator;
+export function Event(eventId: string, methodName: string): PropertyDecorator;
 export function Event(eventId: string, methodName?: string): MethodDecorator | PropertyDecorator {
   if (methodName === undefined) {
-    return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
+    const ret = function (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>) {
       Subscriber.eventList.push(eventId);
 
       Object.defineProperty(target, eventId, {
@@ -41,8 +47,9 @@ export function Event(eventId: string, methodName?: string): MethodDecorator | P
         }
       });
     };
+    return ret as MethodDecorator;
   } else {
-    return (target: Object, propertyKey: string | symbol) => {
+    const ret = function (target: Object, propertyKey: string | symbol) {
       Subscriber.eventList.push(eventId);
 
       Object.defineProperty(target, eventId, {
@@ -53,7 +60,20 @@ export function Event(eventId: string, methodName?: string): MethodDecorator | P
         }
       });
     };
+    return ret as PropertyDecorator;
   }
+}
+
+export function FileSystemProvider(id: string, options?: { isCaseSensitive?: boolean, isReadonly?: boolean }): PropertyDecorator {
+  return (target: Object, propertyKey: string | symbol) => {
+    Subscriber.fileSystemProvider.push(id);
+
+    Object.defineProperty(target, id, {
+      value () {
+        this.register(workspace.registerFileSystemProvider, workspace, id, this[propertyKey], options);
+      }
+    });
+  };
 }
 
 export function TextDocumentContentProvider(id: string): PropertyDecorator {
@@ -87,7 +107,7 @@ export function WebviewPanel(id: string): PropertyDecorator {
 
       Object.defineProperty(target, id, {
         value () {
-          const deserializeWebviewPanel = this[propertyKey].wrapperClass.deserializeWebviewPanel;
+          const deserializeWebviewPanel = this[propertyKey].deserializeWebviewPanel;
           const disp = window.registerWebviewPanelSerializer(id, { deserializeWebviewPanel });
           this.disposables.push(disp);
         }

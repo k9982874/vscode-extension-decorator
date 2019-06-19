@@ -1,35 +1,42 @@
 import { Disposable, ViewColumn, WebviewPanel } from "vscode";
 
-export interface IWebviewWrapper {
-  panel?: WebviewPanel;
-
-  postMessage(message: any): boolean | Thenable<boolean>;
-}
-
 export interface IWebviewProvider {
-  wrapper: IWebviewWrapper;
-  wrapperClass: Object;
+  postMessage?: (message: any) => boolean | Thenable<boolean>;
 
   createWebviewPanel(): WebviewPanel;
-  getHtmlContent(...args: any[]): string;
+  getHtmlContent(...args: any[]): string | Promise<string>;
   didReceiveMessageHandle(message: any): any;
 }
 
 export declare type WebviewProviderClass<T> = (new (...args: any[]) => T);
 
-export function WebviewProvider<T extends WebviewProviderClass<IWebviewProvider>>(constructorFunction: T) {
-  const newWebViewClass: any = class extends constructorFunction implements IWebviewWrapper {
+export function WebviewProvider<T extends WebviewProviderClass<IWebviewProvider>>(constructorFunction: T): any {
+  const newWebViewClass: any = class extends constructorFunction {
     static currentPanel: any = undefined;
 
-    panel?: WebviewPanel = undefined;
+    protected subscriptions: Disposable[] = [];
 
-    private subscriptions: Disposable[] = [];
+    protected panel?: WebviewPanel = undefined;
 
     constructor(...args: any[]) {
       super(...args);
 
-      this.wrapper = this;
-      this.wrapperClass = newWebViewClass;
+      this.postMessage = this._postMessage;
+    }
+
+    updatePage(...args: any[]) {
+      const content = this.getHtmlContent(...args);
+      if (content instanceof Promise) {
+        content.then(result => {
+          if (this.panel) {
+            this.panel.webview.html = result;
+          }
+        });
+      } else {
+        if (this.panel) {
+          this.panel.webview.html = content;
+        }
+      }
     }
 
     activate(panel?: WebviewPanel, ...args: any[]) {
@@ -45,7 +52,7 @@ export function WebviewProvider<T extends WebviewProviderClass<IWebviewProvider>
         }
       }
 
-      this.panel.webview.html = this.getHtmlContent(...args);
+      this.updatePage(...args);
 
       this.panel.onDidDispose(
         this.dispose,
@@ -54,11 +61,7 @@ export function WebviewProvider<T extends WebviewProviderClass<IWebviewProvider>
       );
 
       this.panel.onDidChangeViewState(
-        e => {
-          if (this.panel && this.panel.visible) {
-            this.panel.webview.html = this.getHtmlContent(...args);
-          }
-        },
+        e => this.updatePage(...args),
         this,
         this.subscriptions
       );
@@ -85,7 +88,7 @@ export function WebviewProvider<T extends WebviewProviderClass<IWebviewProvider>
       }
     }
 
-    postMessage(message: any): boolean | Thenable<boolean> {
+    _postMessage(message: any): boolean | Thenable<boolean> {
       if (this.panel) {
         return this.panel.webview.postMessage(message);
       }
